@@ -1,0 +1,587 @@
+/*
+ * Copyright (c) 2006-2018, RT-Thread Development Team
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Change Logs:
+ * Date           Author       Notes
+ * 2007-01-10     Bernard      the first version
+ * 2008-07-12     Bernard      remove all rt_int8, rt_uint32_t etc typedef
+ * 2010-10-26     yi.qiu       add module support
+ * 2010-11-10     Bernard      add cleanup callback function in thread exit.
+ * 2011-05-09     Bernard      use builtin va_arg in GCC 4.x
+ * 2012-11-16     Bernard      change RT_NULL from ((void*)0) to 0.
+ * 2012-12-29     Bernard      change the RT_USING_MEMPOOL location and add
+ *                             RT_USING_MEMHEAP condition.
+ * 2012-12-30     Bernard      add more control command for graphic.
+ * 2013-01-09     Bernard      change version number.
+ * 2015-02-01     Bernard      change version number to v2.1.0
+ * 2017-08-31     Bernard      change version number to v3.0.0
+ * 2017-11-30     Bernard      change version number to v3.0.1
+ * 2017-12-27     Bernard      change version number to v3.0.2
+ * 2018-02-24     Bernard      change version number to v3.0.3
+ * 2018-04-25     Bernard      change version number to v3.0.4
+ * 2018-05-31     Bernard      change version number to v3.1.0
+ * 2018-09-04     Bernard      change version number to v3.1.1
+ * 2018-09-14     Bernard      apply Apache License v2.0 to RT-Thread Kernel
+ * 2018-10-13     Bernard      change version number to v4.0.0
+ * 2018-10-02     Bernard      add 64bit arch support
+ * 2018-11-22     Jesven       add smp member to struct rt_thread
+ *                             add struct rt_cpu
+ *                             add smp relevant macros
+ * 2019-01-27     Bernard      change version number to v4.0.1
+ * 2019-05-17     Bernard      change version number to v4.0.2
+ * 2019-12-20     Bernard      change version number to v4.0.3
+ * 2020-08-10     Meco Man     add macro for struct rt_device_ops
+ */
+
+#ifndef __RT_DEF_H__
+#define __RT_DEF_H__
+
+/* include rtconfig header to import configuration */
+//#include <rtconfig.h>
+//#include "board.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @addtogroup BasicDef
+ */
+
+/**@{*/
+
+/* RT-Thread version information */
+#define RT_VERSION                      4L              /**< major version number */
+#define RT_SUBVERSION                   0L              /**< minor version number */
+#define RT_REVISION                     3L              /**< revise version number */
+
+/* RT-Thread version */
+#define RTTHREAD_VERSION                ((RT_VERSION * 10000) + \
+                                         (RT_SUBVERSION * 100) + RT_REVISION)
+
+/* RT-Thread basic data type definitions */
+#ifndef RT_USING_ARCH_DATA_TYPE
+typedef signed   char                   rt_int8_t;      /**<  8bit integer type */
+typedef signed   short                  rt_int16_t;     /**< 16bit integer type */
+typedef signed   int                    rt_int32_t;     /**< 32bit integer type */
+typedef unsigned char                   rt_uint8_t;     /**<  8bit unsigned integer type */
+typedef unsigned short                  rt_uint16_t;    /**< 16bit unsigned integer type */
+typedef unsigned int                    rt_uint32_t;    /**< 32bit unsigned integer type */
+
+#ifdef ARCH_CPU_64BIT
+typedef signed long                     rt_int64_t;     /**< 64bit integer type */
+typedef unsigned long                   rt_uint64_t;    /**< 64bit unsigned integer type */
+#else
+typedef signed long long                rt_int64_t;     /**< 64bit integer type */
+typedef unsigned long long              rt_uint64_t;    /**< 64bit unsigned integer type */
+#endif
+#endif
+
+typedef int                             rt_bool_t;      /**< boolean type */
+typedef long                            rt_base_t;      /**< Nbit CPU related date type */
+typedef unsigned long                   rt_ubase_t;     /**< Nbit unsigned CPU related data type */
+
+typedef rt_base_t                       rt_err_t;       /**< Type for error number */
+typedef rt_uint32_t                     rt_time_t;      /**< Type for time stamp */
+typedef rt_uint32_t                     rt_tick_t;      /**< Type for tick count */
+typedef rt_base_t                       rt_flag_t;      /**< Type for flags */
+typedef rt_ubase_t                      rt_size_t;      /**< Type for size number */
+typedef rt_ubase_t                      rt_dev_t;       /**< Type for device */
+typedef rt_base_t                       rt_off_t;       /**< Type for offset */
+
+/* boolean type definitions */
+#define RT_TRUE                         1               /**< boolean true  */
+#define RT_FALSE                        0               /**< boolean fails */
+
+/**@}*/
+
+/* maximum value of base type */
+#define RT_UINT8_MAX                    0xff            /**< Maxium number of UINT8 */
+#define RT_UINT16_MAX                   0xffff          /**< Maxium number of UINT16 */
+#define RT_UINT32_MAX                   0xffffffff      /**< Maxium number of UINT32 */
+#define RT_TICK_MAX                     RT_UINT32_MAX   /**< Maxium number of tick */
+
+#define RT_NAME_MAX 8
+
+#if defined (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
+#define __CLANG_ARM
+#endif
+
+/* Compiler Related Definitions */
+#if defined(__CC_ARM) || defined(__CLANG_ARM)           /* ARM Compiler */
+    #include <stdarg.h>
+    #define SECTION(x)                  __attribute__((section(x)))
+    #define RT_UNUSED                   __attribute__((unused))
+    #define RT_USED                     __attribute__((used))
+    #define ALIGN(n)                    __attribute__((aligned(n)))
+
+    #define RT_WEAK                     __attribute__((weak))
+    #define rt_inline                   static __inline
+    /* module compiling */
+    #ifdef RT_USING_MODULE
+        #define RTT_API                 __declspec(dllimport)
+    #else
+        #define RTT_API                 __declspec(dllexport)
+    #endif
+
+#elif defined (__IAR_SYSTEMS_ICC__)     /* for IAR Compiler */
+    #include <stdarg.h>
+    #define SECTION(x)                  @ x
+    #define RT_UNUSED
+    #define RT_USED                     __root
+    #define PRAGMA(x)                   _Pragma(#x)
+    #define ALIGN(n)                    PRAGMA(data_alignment=n)
+    #define RT_WEAK                     __weak
+    #define rt_inline                   static inline
+    #define RTT_API
+
+#elif defined (__GNUC__)                /* GNU GCC Compiler */
+    #ifdef RT_USING_NEWLIB
+        #include <stdarg.h>
+    #else
+        /* the version of GNU GCC must be greater than 4.x */
+        typedef __builtin_va_list       __gnuc_va_list;
+        typedef __gnuc_va_list          va_list;
+        #define va_start(v,l)           __builtin_va_start(v,l)
+        #define va_end(v)               __builtin_va_end(v)
+        #define va_arg(v,l)             __builtin_va_arg(v,l)
+    #endif
+
+    #define SECTION(x)                  __attribute__((section(x)))
+    #define RT_UNUSED                   __attribute__((unused))
+    #define RT_USED                     __attribute__((used))
+    #define ALIGN(n)                    __attribute__((aligned(n)))
+    #define RT_WEAK                     __attribute__((weak))
+    #define rt_inline                   static __inline
+    #define RTT_API
+#elif defined (__ADSPBLACKFIN__)        /* for VisualDSP++ Compiler */
+    #include <stdarg.h>
+    #define SECTION(x)                  __attribute__((section(x)))
+    #define RT_UNUSED                   __attribute__((unused))
+    #define RT_USED                     __attribute__((used))
+    #define ALIGN(n)                    __attribute__((aligned(n)))
+    #define RT_WEAK                     __attribute__((weak))
+    #define rt_inline                   static inline
+    #define RTT_API
+#elif defined (_MSC_VER)
+    #include <stdarg.h>
+    #define SECTION(x)
+    #define RT_UNUSED
+    #define RT_USED
+    #define ALIGN(n)                    __declspec(align(n))
+    #define RT_WEAK
+    #define rt_inline                   static __inline
+    #define RTT_API
+#elif defined (__TI_COMPILER_VERSION__)
+    #include <stdarg.h>
+    /* The way that TI compiler set section is different from other(at least
+     * GCC and MDK) compilers. See ARM Optimizing C/C++ Compiler 5.9.3 for more
+     * details. */
+    #define SECTION(x)
+    #define RT_UNUSED
+    #define RT_USED
+    #define PRAGMA(x)                   _Pragma(#x)
+    #define ALIGN(n)
+    #define RT_WEAK
+    #define rt_inline                   static inline
+    #define RTT_API
+#else
+    #error not supported tool chain
+#endif
+
+/* initialization export */
+#ifdef RT_USING_COMPONENTS_INIT
+typedef int (*init_fn_t)(void);
+#ifdef _MSC_VER /* we do not support MS VC++ compiler */
+    #define INIT_EXPORT(fn, level)
+#else
+    #if RT_DEBUG_INIT
+        struct rt_init_desc
+        {
+            const char* fn_name;
+            const init_fn_t fn;
+        };
+        #define INIT_EXPORT(fn, level)                                                       \
+            const char __rti_##fn##_name[] = #fn;                                            \
+            RT_USED const struct rt_init_desc __rt_init_desc_##fn SECTION(".rti_fn." level) = \
+            { __rti_##fn##_name, fn};
+    #else
+        #define INIT_EXPORT(fn, level)                                                       \
+            RT_USED const init_fn_t __rt_init_##fn SECTION(".rti_fn." level) = fn
+    #endif
+#endif
+#else
+#define INIT_EXPORT(fn, level)
+#endif
+
+/* board init routines will be called in board_init() function */
+#define INIT_BOARD_EXPORT(fn)           INIT_EXPORT(fn, "1")
+
+/* pre/device/component/env/app init routines will be called in init_thread */
+/* components pre-initialization (pure software initilization) */
+#define INIT_PREV_EXPORT(fn)            INIT_EXPORT(fn, "2")
+/* device initialization */
+#define INIT_DEVICE_EXPORT(fn)          INIT_EXPORT(fn, "3")
+/* components initialization (dfs, lwip, ...) */
+#define INIT_COMPONENT_EXPORT(fn)       INIT_EXPORT(fn, "4")
+/* environment initialization (mount disk, ...) */
+#define INIT_ENV_EXPORT(fn)             INIT_EXPORT(fn, "5")
+/* appliation initialization (rtgui application etc ...) */
+#define INIT_APP_EXPORT(fn)             INIT_EXPORT(fn, "6")
+
+#if !defined(RT_USING_FINSH)
+/* define these to empty, even if not include finsh.h file */
+#define FINSH_FUNCTION_EXPORT(name, desc)
+#define FINSH_FUNCTION_EXPORT_ALIAS(name, alias, desc)
+#define FINSH_VAR_EXPORT(name, type, desc)
+
+#define MSH_CMD_EXPORT(command, desc)
+#define MSH_CMD_EXPORT_ALIAS(command, alias, desc)
+#elif !defined(FINSH_USING_SYMTAB)
+#define FINSH_FUNCTION_EXPORT_CMD(name, cmd, desc)
+#endif
+
+/* event length */
+#define RT_EVENT_LENGTH                 32
+
+/* memory management option */
+#define RT_MM_PAGE_SIZE                 4096
+#define RT_MM_PAGE_MASK                 (RT_MM_PAGE_SIZE - 1)
+#define RT_MM_PAGE_BITS                 12
+
+/* kernel malloc definitions */
+#ifndef RT_KERNEL_MALLOC
+#define RT_KERNEL_MALLOC(sz)            rt_malloc(sz)
+#endif
+
+#ifndef RT_KERNEL_FREE
+#define RT_KERNEL_FREE(ptr)             rt_free(ptr)
+#endif
+
+#ifndef RT_KERNEL_REALLOC
+#define RT_KERNEL_REALLOC(ptr, size)    rt_realloc(ptr, size)
+#endif
+
+/**
+ * @addtogroup Error
+ */
+
+/**@{*/
+
+/* RT-Thread error code definitions */
+#define RT_EOK                          0               /**< There is no error */
+#define RT_ERROR                        1               /**< A generic error happens */
+#define RT_ETIMEOUT                     2               /**< Timed out */
+#define RT_EFULL                        3               /**< The resource is full */
+#define RT_EEMPTY                       4               /**< The resource is empty */
+#define RT_ENOMEM                       5               /**< No memory */
+#define RT_ENOSYS                       6               /**< No system */
+#define RT_EBUSY                        7               /**< Busy */
+#define RT_EIO                          8               /**< IO error */
+#define RT_EINTR                        9               /**< Interrupted system call */
+#define RT_EINVAL                       10              /**< Invalid argument */
+
+/**@}*/
+
+/**
+ * @ingroup BasicDef
+ *
+ * @def RT_ALIGN(size, align)
+ * Return the most contiguous size aligned at specified width. RT_ALIGN(13, 4)
+ * would return 16.
+ */
+#define RT_ALIGN(size, align)           (((size) + (align) - 1) & ~((align) - 1))
+
+/**
+ * @ingroup BasicDef
+ *
+ * @def RT_ALIGN_DOWN(size, align)
+ * Return the down number of aligned at specified width. RT_ALIGN_DOWN(13, 4)
+ * would return 12.
+ */
+#define RT_ALIGN_DOWN(size, align)      ((size) & ~((align) - 1))
+
+/**
+ * @ingroup BasicDef
+ *
+ * @def RT_NULL
+ * Similar as the \c NULL in C library.
+ */
+#define RT_NULL                         (0)
+
+/**
+ * Double List structure
+ */
+struct rt_list_node
+{
+    struct rt_list_node *next;                          /**< point to next node. */
+    struct rt_list_node *prev;                          /**< point to prev node. */
+};
+typedef struct rt_list_node rt_list_t;                  /**< Type for lists. */
+
+/**
+ * Single List structure
+ */
+struct rt_slist_node
+{
+    struct rt_slist_node *next;                         /**< point to next node. */
+};
+typedef struct rt_slist_node rt_slist_t;                /**< Type for single list. */
+
+/**
+ * @addtogroup KernelObject
+ */
+
+/**@{*/
+
+/*
+ * kernel object macros
+ */
+#define RT_OBJECT_FLAG_MODULE           0x80            /**< is module object. */
+
+/**
+ * Base structure of Kernel object
+ */
+struct rt_object
+{
+    char       name[RT_NAME_MAX];                       /**< name of kernel object */
+    rt_uint8_t type;                                    /**< type of kernel object */
+    rt_uint8_t flag;                                    /**< flag of kernel object */
+
+#ifdef RT_USING_MODULE
+    void      *module_id;                               /**< id of application module */
+#endif
+    rt_list_t  list;                                    /**< list node of kernel object */
+};
+typedef struct rt_object *rt_object_t;                  /**< Type for kernel objects. */
+
+/**
+ *  The object type can be one of the follows with specific
+ *  macros enabled:
+ *  - Thread
+ *  - Semaphore
+ *  - Mutex
+ *  - Event
+ *  - MailBox
+ *  - MessageQueue
+ *  - MemHeap
+ *  - MemPool
+ *  - Device
+ *  - Timer
+ *  - Module
+ *  - Unknown
+ *  - Static
+ */
+enum rt_object_class_type
+{
+    RT_Object_Class_Null          = 0x00,      /**< The object is not used. */
+    RT_Object_Class_Thread        = 0x01,      /**< The object is a thread. */
+    RT_Object_Class_Semaphore     = 0x02,      /**< The object is a semaphore. */
+    RT_Object_Class_Mutex         = 0x03,      /**< The object is a mutex. */
+    RT_Object_Class_Event         = 0x04,      /**< The object is a event. */
+    RT_Object_Class_MailBox       = 0x05,      /**< The object is a mail box. */
+    RT_Object_Class_MessageQueue  = 0x06,      /**< The object is a message queue. */
+    RT_Object_Class_MemHeap       = 0x07,      /**< The object is a memory heap. */
+    RT_Object_Class_MemPool       = 0x08,      /**< The object is a memory pool. */
+    RT_Object_Class_Device        = 0x09,      /**< The object is a device. */
+    RT_Object_Class_Timer         = 0x0a,      /**< The object is a timer. */
+    RT_Object_Class_Module        = 0x0b,      /**< The object is a module. */
+    RT_Object_Class_Unknown       = 0x0c,      /**< The object is unknown. */
+    RT_Object_Class_Static        = 0x80       /**< The object is a static object. */
+};
+
+/**
+ * The information of the kernel object
+ */
+struct rt_object_information
+{
+    enum rt_object_class_type type;                     /**< object class type */
+    rt_list_t                 object_list;              /**< object list */
+    rt_size_t                 object_size;              /**< object size */
+};
+
+/**
+ * The hook function call macro
+ */
+#ifdef RT_USING_HOOK
+#define RT_OBJECT_HOOK_CALL(func, argv) \
+    do { if ((func) != RT_NULL) func argv; } while (0)
+#else
+#define RT_OBJECT_HOOK_CALL(func, argv)
+#endif
+
+/**@}*/
+
+/**
+ * @addtogroup Clock
+ */
+
+/**@{*/
+
+/**
+ * clock & timer macros
+ */
+#define RT_TIMER_FLAG_DEACTIVATED       0x0             /**< timer is deactive */
+#define RT_TIMER_FLAG_ACTIVATED         0x1             /**< timer is active */
+#define RT_TIMER_FLAG_ONE_SHOT          0x0             /**< one shot timer */
+#define RT_TIMER_FLAG_PERIODIC          0x2             /**< periodic timer */
+
+#define RT_TIMER_FLAG_HARD_TIMER        0x0             /**< hard timer,the timer's callback function will be called in tick isr. */
+#define RT_TIMER_FLAG_SOFT_TIMER        0x4             /**< soft timer,the timer's callback function will be called in timer thread. */
+
+#define RT_TIMER_CTRL_SET_TIME          0x0             /**< set timer control command */
+#define RT_TIMER_CTRL_GET_TIME          0x1             /**< get timer control command */
+#define RT_TIMER_CTRL_SET_ONESHOT       0x2             /**< change timer to one shot */
+#define RT_TIMER_CTRL_SET_PERIODIC      0x3             /**< change timer to periodic */
+#define RT_TIMER_CTRL_GET_STATE         0x4             /**< get timer run state active or deactive*/
+
+#ifndef RT_TIMER_SKIP_LIST_LEVEL
+#define RT_TIMER_SKIP_LIST_LEVEL          1
+#endif
+
+/* 1 or 3 */
+#ifndef RT_TIMER_SKIP_LIST_MASK
+#define RT_TIMER_SKIP_LIST_MASK         0x3
+#endif
+
+/**
+ * timer structure
+ */
+struct rt_timer
+{
+    struct rt_object parent;                            /**< inherit from rt_object */
+
+    rt_list_t        row[RT_TIMER_SKIP_LIST_LEVEL];
+
+    void (*timeout_func)(void *parameter);              /**< timeout function */
+    void            *parameter;                         /**< timeout function's parameter */
+
+    rt_tick_t        init_tick;                         /**< timer timeout tick */
+    rt_tick_t        timeout_tick;                      /**< timeout tick */
+};
+typedef struct rt_timer *rt_timer_t;
+
+/**@}*/
+
+/**
+ * @addtogroup Signal
+ */
+#ifdef RT_USING_SIGNALS
+#include <libc/libc_signal.h>
+typedef unsigned long rt_sigset_t;
+typedef void (*rt_sighandler_t)(int signo);
+typedef siginfo_t rt_siginfo_t;
+
+#define RT_SIG_MAX          32
+#endif
+/**@}*/
+
+/**
+ * @addtogroup Thread
+ */
+
+/**@{*/
+
+/*
+ * Thread
+ */
+
+/*
+ * thread state definitions
+ */
+#define RT_THREAD_INIT                  0x00                /**< Initialized status */
+#define RT_THREAD_READY                 0x01                /**< Ready status */
+#define RT_THREAD_SUSPEND               0x02                /**< Suspend status */
+#define RT_THREAD_RUNNING               0x03                /**< Running status */
+#define RT_THREAD_BLOCK                 RT_THREAD_SUSPEND   /**< Blocked status */
+#define RT_THREAD_CLOSE                 0x04                /**< Closed status */
+#define RT_THREAD_STAT_MASK             0x07
+
+#define RT_THREAD_STAT_YIELD            0x08                /**< indicate whether remaining_tick has been reloaded since last schedule */
+#define RT_THREAD_STAT_YIELD_MASK       RT_THREAD_STAT_YIELD
+
+#define RT_THREAD_STAT_SIGNAL           0x10                /**< task hold signals */
+#define RT_THREAD_STAT_SIGNAL_READY     (RT_THREAD_STAT_SIGNAL | RT_THREAD_READY)
+#define RT_THREAD_STAT_SIGNAL_WAIT      0x20                /**< task is waiting for signals */
+#define RT_THREAD_STAT_SIGNAL_PENDING   0x40                /**< signals is held and it has not been procressed */
+#define RT_THREAD_STAT_SIGNAL_MASK      0xf0
+
+/**
+ * thread control command definitions
+ */
+#define RT_THREAD_CTRL_STARTUP          0x00                /**< Startup thread. */
+#define RT_THREAD_CTRL_CLOSE            0x01                /**< Close thread. */
+#define RT_THREAD_CTRL_CHANGE_PRIORITY  0x02                /**< Change thread priority. */
+#define RT_THREAD_CTRL_INFO             0x03                /**< Get thread information. */
+#define RT_THREAD_CTRL_BIND_CPU         0x04                /**< Set thread bind cpu. */
+
+#ifdef RT_USING_SMP
+
+#define RT_CPU_DETACHED                 RT_CPUS_NR          /**< The thread not running on cpu. */
+#define RT_CPU_MASK                     ((1 << RT_CPUS_NR) - 1) /**< All CPUs mask bit. */
+
+#ifndef RT_SCHEDULE_IPI
+#define RT_SCHEDULE_IPI                 0
+#endif
+
+/**
+ * CPUs definitions
+ *
+ */
+struct rt_cpu
+{
+    struct rt_thread *current_thread;
+
+    rt_uint16_t irq_nest;
+    rt_uint8_t  irq_switch_flag;
+
+    rt_uint8_t current_priority;
+    rt_list_t priority_table[RT_THREAD_PRIORITY_MAX];
+#if RT_THREAD_PRIORITY_MAX > 32
+    rt_uint32_t priority_group;
+    rt_uint8_t ready_table[32];
+#else
+    rt_uint32_t priority_group;
+#endif
+
+    rt_tick_t tick;
+};
+
+#endif
+
+/**
+ * device (I/O) class type
+ */
+enum rt_device_class_type
+{
+    RT_Device_Class_Char = 0,                           /**< character device */
+    RT_Device_Class_Block,                              /**< block device */
+    RT_Device_Class_NetIf,                              /**< net interface */
+    RT_Device_Class_MTD,                                /**< memory device */
+    RT_Device_Class_CAN,                                /**< CAN device */
+    RT_Device_Class_RTC,                                /**< RTC device */
+    RT_Device_Class_Sound,                              /**< Sound device */
+    RT_Device_Class_Graphic,                            /**< Graphic device */
+    RT_Device_Class_I2CBUS,                             /**< I2C bus device */
+    RT_Device_Class_USBDevice,                          /**< USB slave device */
+    RT_Device_Class_USBHost,                            /**< USB host bus */
+    RT_Device_Class_SPIBUS,                             /**< SPI bus device */
+    RT_Device_Class_SPIDevice,                          /**< SPI device */
+    RT_Device_Class_SDIO,                               /**< SDIO bus device */
+    RT_Device_Class_PM,                                 /**< PM pseudo device */
+    RT_Device_Class_Pipe,                               /**< Pipe device */
+    RT_Device_Class_Portal,                             /**< Portal device */
+    RT_Device_Class_Timer,                              /**< Timer device */
+    RT_Device_Class_Miscellaneous,                      /**< Miscellaneous device */
+    RT_Device_Class_Sensor,                             /**< Sensor device */
+    RT_Device_Class_Touch,                              /**< Touch device */
+    RT_Device_Class_Unknown                             /**< unknown device */
+};
+
+extern rt_size_t rt_strlen(const char *s);
+
+#define RT_ASSERT(EX)  assert_param(EX);
+
+#endif

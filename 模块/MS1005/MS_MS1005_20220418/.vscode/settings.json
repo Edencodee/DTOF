@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "board.h": "c",
+        "bsp.h": "c",
+        "test_code.h": "c",
+        "tim.h": "c"
+    }
+}

@@ -1,0 +1,22 @@
+*** Using Compiler 'V5.06 update 7 (build 960)', folder: 'D:\programs\Keil_v5\ARM\ARMCC\Bin'
+Build target 'GD32F4XX'
+compiling task.c...
+..\src\task.c(57): error:  #20: identifier "PIXELS" is undefined
+  	for (int i = 0; i < PIXELS; i++) {
+..\src\task.c(70): error:  #167: argument of type "uint32_t *" is incompatible with parameter of type "uint16_t *"
+  		Debug(p);
+..\src\task.c(108): error:  #20: identifier "g_inaAdcBuf" is undefined
+  	OledTask((uint16_t*)g_inaAdcBuf);
+..\src\task.c: 0 warnings, 3 errors
+compiling task_flash.c...
+..\src\task_flash.c(107): error:  #20: identifier "g_filtPos" is undefined
+  				g_spara.xs[n] = g_filtPos;
+..\src\task_flash.c: 0 warnings, 1 error
+compiling task_oled.c...
+..\src\task_oled.c(1410): error:  #20: identifier "BG_MAX" is undefined
+  	if ((p[wbtm] > BG_MAX) || (p[wtop] > BG_MAX)) { /* over exposure handler */
+..\src\task_oled.c: 0 warnings, 1 error
+compiling user_spi.c...
+".\output\Project.axf" - 5 Error(s), 0 Warning(s).
+Target not created.
+Build Time Elapsed:  00:00:06

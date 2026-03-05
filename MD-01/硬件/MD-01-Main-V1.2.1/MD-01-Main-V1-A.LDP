@@ -1,0 +1,3 @@
+Layer Pairs Export File for PCB: D:\HM\AD\end\MD-01-PCB-Project\MD-01-Main-V1.0\MD-01-Main-V1-A.PcbDoc
+LayersSetName=Top_Bot_Thru_Holes|DrillFile=md-01-main-v1-a-roundholes.txt|DrillLayers=gtl,gp1,gp2,gbl
+LayersSetName=Top_Bot_Slot_Holes|DrillFile=md-01-main-v1-a-slotholes.txt|DrillLayers=gtl,gp1,gp2,gbl

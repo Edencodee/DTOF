@@ -1,0 +1,15 @@
+Source PCB Design MD-01-Main-V1-A.PcbDoc contains embedded board array. It is recomended to generate individual BOM for each embedded board PCB design.
+
+Output: NC Drill Files
+Type  : NC Drill
+From  : Project [MD-01-Main-V1.PrjPcb]
+   Generated File[MD-01-Main-V1-A-RoundHoles.TXT]
+   Generated File[MD-01-Main-V1-A-SlotHoles.TXT]
+   Generated File[MD-01-Main-V1-A.LDP]
+   Generated File[MD-01-Main-V1-A.DRR]
+
+
+Files Generated   : 4
+Documents Printed : 0
+
+Finished Output Generation At 16:58:56 On 2025/1/17

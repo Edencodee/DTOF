@@ -1,0 +1,5 @@
+DRC Rules Export File for PCB: D:\HM\AD\end\MD-01-PCB-Project\MD-01-Main-V1.0\MD-01-Main-V1-A.PcbDoc
+RuleKind=SolderMaskExpansion|RuleName=SolderMaskExpansion|Scope=Board|Minimum=4.00
+RuleKind=Width|RuleName=Width|Scope=Board|Minimum=10.00
+RuleKind=Clearance|RuleName=Clearance|Scope=Board|Minimum=10.00
+RuleKind=ShortCircuit|RuleName=ShortCircuit|Scope=Board|Allowed=0
